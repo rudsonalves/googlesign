@@ -109,6 +109,19 @@ class _SignInDemoState extends State<SignInDemo> {
             (name as Map<Object?, dynamic>)['displayName'] != null,
         orElse: () => null,
       ) as Map<String, dynamic>?;
+
+      // log('connections!.length: ${connections!.length.toString()}  connections!.type ${connections.runtimeType}');
+      // for (dynamic conn in connections) {
+      //   try {
+      //     String? name = conn['names'][0]['displayName'] as String;
+      //     log(name);
+      //   } catch (err) {
+      //     log(conn.toString());
+      //     log(conn['names'][0].toString());
+      //     throw err;
+      //   }
+      // }
+
       if (name != null) {
         return name['displayName'] as String?;
       }

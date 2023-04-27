@@ -19,10 +19,12 @@ enum GoogleSignStatus {
   notConnected,
 }
 
-class MyGoogleSignIn extends ChangeNotifier {
-  GoogleSignStatus status = GoogleSignStatus.notConnected;
+class MyGoogleSignIn {
+  ValueNotifier<GoogleSignStatus> status =
+      ValueNotifier(GoogleSignStatus.notConnected);
   GoogleSignInAccount? _currentUser;
-  bool _isAuthorized = false; // has granted permissions?
+  ValueNotifier<bool> _isAuthorized =
+      ValueNotifier(false); // has granted permissions?
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // Optional clientId
     // clientId: 'your-client_id.apps.googleusercontent.com',
@@ -30,26 +32,25 @@ class MyGoogleSignIn extends ChangeNotifier {
   );
 
   MyGoogleSignIn() {
-    _googleSignIn.onCurrentUserChanged
-        .listen((GoogleSignInAccount? account) async {
-      // In mobile, being authenticated means being authorized...
-      bool isAuthorized = account != null;
-      // However, in the web...
-      if (kIsWeb && account != null) {
-        isAuthorized = await _googleSignIn.canAccessScopes(scopes);
-      }
+    _googleSignIn.onCurrentUserChanged.listen(
+      (GoogleSignInAccount? account) async {
+        // In mobile, being authenticated means being authorized...
+        bool isAuthorized = account != null;
+        // However, in the web...
+        if (kIsWeb && account != null) {
+          isAuthorized = await _googleSignIn.canAccessScopes(scopes);
+        }
 
-      // setState(() {
-      _currentUser = account;
-      _isAuthorized = isAuthorized;
-      // });
+        _currentUser = account;
+        _isAuthorized = ValueNotifier(isAuthorized);
 
-      // Now that we know that the user can access the required scopes, the app
-      // can call the REST API.
-      if (isAuthorized) {
-        handleGetContact(account!);
-      }
-    });
+        // Now that we know that the user can access the required scopes, the app
+        // can call the REST API.
+        if (isAuthorized) {
+          handleGetContact(account!);
+        }
+      },
+    );
 
     // In the web, _googleSignIn.signInSilently() triggers the One Tap UX.
     //
@@ -59,13 +60,12 @@ class MyGoogleSignIn extends ChangeNotifier {
     _googleSignIn.signInSilently();
   }
 
-  bool get isAuthorized => _isAuthorized;
+  bool get isAuthorized => _isAuthorized as bool;
   GoogleSignInAccount? get currentUser => _currentUser;
 
   // Calls the People API REST endpoint for the signed-in user to retrieve information.
   Future<void> handleGetContact(GoogleSignInAccount user) async {
-    status = GoogleSignStatus.loading;
-    notifyListeners();
+    status = ValueNotifier(GoogleSignStatus.loading);
 
     final http.Response response = await http.get(
       Uri.parse('https://people.googleapis.com/v1/people/me/connections'
@@ -74,23 +74,21 @@ class MyGoogleSignIn extends ChangeNotifier {
     );
 
     if (response.statusCode != 200) {
-      status = GoogleSignStatus.error;
-      notifyListeners();
+      status = ValueNotifier(GoogleSignStatus.error);
 
       log('People API ${response.statusCode} response: ${response.body}');
       return;
     }
+    status = ValueNotifier(GoogleSignStatus.connected);
 
-    final Map<String, dynamic> data =
-        json.decode(response.body) as Map<String, dynamic>;
-    final String? namedContact = _pickFirstNamedContact(data);
+    // final Map<String, dynamic> data =
+    //     json.decode(response.body) as Map<String, dynamic>;
+    // final String? namedContact = _pickFirstNamedContact(data);
 
-    if (namedContact != null) {
-      status = GoogleSignStatus.connected;
-    } else {
-      status = GoogleSignStatus.notConnected;
-    }
-    notifyListeners();
+    // if (namedContact != null) {
+    // } else {
+    //   status = GoogleSignStatus.notConnected;
+    // }
   }
 
   String? _pickFirstNamedContact(Map<String, dynamic> data) {
@@ -133,9 +131,9 @@ class MyGoogleSignIn extends ChangeNotifier {
   // On the web, this must be called from an user interaction (button click).
   Future<void> handleAuthorizeScopes() async {
     final bool isAuthorized = await _googleSignIn.requestScopes(scopes);
-    // setState(() {
-    _isAuthorized = isAuthorized;
-    // });
+
+    _isAuthorized = ValueNotifier(isAuthorized);
+
     if (isAuthorized) {
       handleGetContact(_currentUser!);
     }
