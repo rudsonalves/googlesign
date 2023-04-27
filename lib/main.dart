@@ -11,16 +11,24 @@
 import 'package:flutter/material.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 
-import './pages/sign_in_demo.dart';
+// import './pages/sign_in_demo.dart';
+import 'pages/sign_in_google_page.dart';
 // import 'package:http/http.dart' as http;
 
 // import 'src/sign_in_button.dart';
 
 void main() {
   runApp(
-    const MaterialApp(
-      title: 'Google Sign In',
-      home: SignInDemo(),
+    MaterialApp(
+      theme: ThemeData(
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          elevation: 5,
+          centerTitle: true,
+        ),
+        colorSchemeSeed: Colors.blueAccent,
+      ),
+      home: const SignInGooglePage(),
     ),
   );
 }
